@@ -1,4 +1,4 @@
-import fs from "fs";
+// netlify/functions/send-otp.js
 import crypto from "crypto";
 
 export async function handler(event) {
@@ -13,20 +13,21 @@ export async function handler(event) {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const hashed = crypto.createHash("sha256").update(otp).digest("hex");
 
-  const otpFile = "/tmp/otp.json";
-  let otpData = {};
-  if (fs.existsSync(otpFile)) {
-    otpData = JSON.parse(fs.readFileSync(otpFile, "utf8"));
-  }
-  otpData[email] = { hash: hashed, expires: Date.now() + 10 * 60 * 1000 };
-  fs.writeFileSync(otpFile, JSON.stringify(otpData));
+  // Save OTP in JSONBin for 10 minutes
+  const otpRecord = { email, hashed, expires: Date.now() + 10 * 60 * 1000 };
+  const binRes = await fetch("https://api.jsonbin.io/v3/b", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(otpRecord),
+  });
+  const binData = await binRes.json();
+  const binId = binData.metadata.id;
 
   // Send via Mailjet
   const auth = Buffer.from(
     `${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`
   ).toString("base64");
-
-  const res = await fetch("https://api.mailjet.com/v3.1/send", {
+  await fetch("https://api.mailjet.com/v3.1/send", {
     method: "POST",
     headers: {
       Authorization: `Basic ${auth}`,
@@ -45,10 +46,8 @@ export async function handler(event) {
     }),
   });
 
-  if (!res.ok) {
-    const errorText = await res.text();
-    return { statusCode: 500, body: JSON.stringify({ error: errorText }) };
-  }
-
-  return { statusCode: 200, body: JSON.stringify({ message: "OTP sent successfully!" }) };
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ message: "OTP sent successfully!", binId }),
+  };
 }
