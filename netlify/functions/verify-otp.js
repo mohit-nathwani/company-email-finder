@@ -1,4 +1,3 @@
-// netlify/functions/verify-otp.js
 import fs from "fs";
 import crypto from "crypto";
 
@@ -11,22 +10,23 @@ export async function handler(event) {
   if (email !== allowedEmail)
     return { statusCode: 403, body: JSON.stringify({ error: "Unauthorized" }) };
 
-  const filePath = `/tmp/otp-${email}.txt`;
-  if (!fs.existsSync(filePath))
+  const otpFile = "/tmp/otp.json";
+  if (!fs.existsSync(otpFile))
     return { statusCode: 401, body: JSON.stringify({ error: "Invalid or expired OTP" }) };
 
-  const [storedHash, expiry] = fs.readFileSync(filePath, "utf8").split("|");
-  if (Date.now() > Number(expiry))
+  const otpData = JSON.parse(fs.readFileSync(otpFile, "utf8"));
+  const record = otpData[email];
+  if (!record || Date.now() > record.expires)
     return { statusCode: 401, body: JSON.stringify({ error: "OTP expired" }) };
 
   const hashed = crypto.createHash("sha256").update(otp).digest("hex");
-  if (hashed !== storedHash)
+  if (record.hash !== hashed)
     return { statusCode: 401, body: JSON.stringify({ error: "Invalid OTP" }) };
 
-  // Optional: remove file after verification
-  fs.unlinkSync(filePath);
+  // Remove after verification
+  delete otpData[email];
+  fs.writeFileSync(otpFile, JSON.stringify(otpData));
 
-  // Issue short-lived token
   const token = crypto.randomBytes(16).toString("hex");
   return { statusCode: 200, body: JSON.stringify({ success: true, token }) };
 }
