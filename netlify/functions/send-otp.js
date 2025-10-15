@@ -35,7 +35,7 @@ export async function handler(event) {
     body: JSON.stringify({
       Messages: [
         {
-          From: { Email: "no-reply@yourdomain.com", Name: "Company Email Finder" },
+          From: { Email: "Mohitnathwani55@gmail.com", Name: "Company Email Finder" },
           To: [{ Email: email }],
           Subject: "Your One-Time Login Code",
           TextPart: `Your OTP code is ${otp}`,
