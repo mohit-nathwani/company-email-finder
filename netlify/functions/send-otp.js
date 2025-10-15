@@ -1,5 +1,6 @@
 // netlify/functions/send-otp.js
 import crypto from "crypto";
+import { createClient } from "@netlify/blobs";
 
 export async function handler(event) {
   const { email } = JSON.parse(event.body || "{}");
@@ -10,14 +11,17 @@ export async function handler(event) {
   if (email !== allowedEmail)
     return { statusCode: 403, body: JSON.stringify({ error: "Unauthorized email" }) };
 
+  // create random 6-digit OTP and hash it
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const hashed = crypto.createHash("sha256").update(otp).digest("hex");
 
-  // temporary memory store
-  globalThis.otpCache = globalThis.otpCache || {};
-  globalThis.otpCache[email] = { hash: hashed, expires: Date.now() + 10 * 60 * 1000 };
+  // --- store hash in Netlify Blobs for 10 minutes
+  const blobs = createClient();
+  await blobs.set(`otp-${email}`, hashed, {
+    metadata: { expires: Date.now() + 10 * 60 * 1000 },
+  });
 
-  // Mailjet send
+  // --- send OTP via Mailjet
   const auth = Buffer.from(
     `${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`
   ).toString("base64");
@@ -42,8 +46,8 @@ export async function handler(event) {
   });
 
   if (!res.ok) {
-    const error = await res.text();
-    return { statusCode: 500, body: JSON.stringify({ error: error }) };
+    const errorText = await res.text();
+    return { statusCode: 500, body: JSON.stringify({ error: errorText }) };
   }
 
   return { statusCode: 200, body: JSON.stringify({ message: "OTP sent successfully!" }) };
