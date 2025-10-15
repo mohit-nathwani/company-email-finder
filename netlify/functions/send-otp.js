@@ -50,8 +50,8 @@ export async function handler(event) {
     body: JSON.stringify({
       Messages: [
         {
-          From: { Email: Mohitnathwani55@gmail.com, Name: "Company Email Finder" },
-          To: [{ Email: Mohitnathwani55@gmail.com }],
+          From: { Email: "Mohitnathwani55@gmail.com", Name: "Company Email Finder" },
+          To: [{ Email: "Mohitnathwani55@gmail.com" }],
           Subject: "Your One-Time Login Code",
           TextPart: `Your login code is ${otp}. It changes every 10 minutes.`,
           HTMLPart: `<h2>Your login code is: <b>${otp}</b></h2><p>This code changes every 10 minutes.</p>`,
