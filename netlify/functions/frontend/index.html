@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Company Email Finder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/framer-motion@10.16.2/dist/framer-motion.umd.js"></script>
+</head>
+<body class="bg-gray-950 text-white min-h-screen flex flex-col items-center justify-center font-sans">
+
+  <div class="bg-gray-900 p-8 rounded-2xl shadow-2xl max-w-md w-full">
+    <h1 class="text-3xl font-bold text-center mb-6 text-blue-400">🔐 Company Email Finder</h1>
+
+    <div id="login-section">
+      <p class="text-sm mb-4 text-gray-400 text-center">Enter your email to get OTP:</p>
+      <input id="email" type="email" placeholder="Your email address"
+        class="w-full p-3 rounded-lg bg-gray-800 text-white mb-4 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <button onclick="sendOTP()"
+        class="w-full bg-blue-500 hover:bg-blue-600 transition p-3 rounded-lg font-semibold">Send OTP</button>
+    </div>
+
+    <div id="verify-section" class="hidden">
+      <p class="text-sm mb-4 text-gray-400 text-center">Enter the OTP sent to your email:</p>
+      <input id="otp" type="text" placeholder="6-digit OTP"
+        class="w-full p-3 rounded-lg bg-gray-800 text-white mb-4 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <button onclick="verifyOTP()"
+        class="w-full bg-green-500 hover:bg-green-600 transition p-3 rounded-lg font-semibold">Verify OTP</button>
+    </div>
+
+    <div id="app-section" class="hidden">
+      <h2 class="text-xl font-semibold mb-2 text-blue-300">Welcome, Mohit 👋</h2>
+      <p class="text-gray-400 text-sm mb-3">You are logged in securely.</p>
+
+      <input id="company" type="text" placeholder="Enter company name"
+        class="w-full p-3 rounded-lg bg-gray-800 text-white mb-4 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <button onclick="findEmails()"
+        class="w-full bg-indigo-500 hover:bg-indigo-600 transition p-3 rounded-lg font-semibold">Find Company Emails</button>
+
+      <pre id="result" class="mt-4 bg-gray-800 p-4 rounded-lg text-sm overflow-x-auto text-gray-300"></pre>
+    </div>
+  </div>
+
+  <footer class="mt-8 text-gray-500 text-sm text-center">
+    Proudly made by <span class="text-blue-400 font-semibold">Mohit Nathwani</span>
+  </footer>
+
+  <script>
+    const API_BASE = "/.netlify/functions";
+    const emailInput = document.getElementById("email");
+    const otpInput = document.getElementById("otp");
+    const companyInput = document.getElementById("company");
+    const resultBox = document.getElementById("result");
+    let token = localStorage.getItem("authToken");
+
+    async function sendOTP() {
+      const email = emailInput.value.trim();
+      const res = await fetch(`${API_BASE}/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("OTP sent successfully!");
+        document.getElementById("login-section").classList.add("hidden");
+        document.getElementById("verify-section").classList.remove("hidden");
+      } else {
+        alert(data.error || "Error sending OTP.");
+      }
+    }
+
+    async function verifyOTP() {
+      const email = emailInput.value.trim();
+      const otp = otpInput.value.trim();
+      const res = await fetch(`${API_BASE}/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp })
+      });
+      const data = await res.json();
+      if (data.success) {
+        token = data.token;
+        localStorage.setItem("authToken", token);
+        alert("OTP verified successfully!");
+        document.getElementById("verify-section").classList.add("hidden");
+        document.getElementById("app-section").classList.remove("hidden");
+      } else {
+        alert(data.error || "Invalid OTP.");
+      }
+    }
+
+    async function findEmails() {
+      const company = companyInput.value.trim();
+      resultBox.innerText = "Searching...";
+      const res = await fetch(`${API_BASE}/find-company-emails`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ company })
+      });
+      const data = await res.json();
+      resultBox.innerText = JSON.stringify(data, null, 2);
+    }
+
+    if (token) {
+      document.getElementById("login-section").classList.add("hidden");
+      document.getElementById("app-section").classList.remove("hidden");
+    }
+  </script>
+</body>
+</html>
