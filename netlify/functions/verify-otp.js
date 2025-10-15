@@ -10,10 +10,10 @@ export async function handler(event) {
   if (email !== allowedEmail)
     return { statusCode: 403, body: JSON.stringify({ error: "Unauthorized" }) };
 
-  // Retrieve stored OTP record
-  const binRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`);
-  const binData = await binRes.json();
-  const record = binData.record;
+  // retrieve record
+  const res = await fetch(`https://webhook.site/token/${binId}`);
+  if (!res.ok) return { statusCode: 401, body: JSON.stringify({ error: "OTP not found" }) };
+  const record = await res.json();
 
   if (!record || Date.now() > record.expires)
     return { statusCode: 401, body: JSON.stringify({ error: "OTP expired" }) };
