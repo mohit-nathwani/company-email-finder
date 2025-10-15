@@ -6,12 +6,8 @@
   <title>Company Email Finder</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-
   <style>
-    body {
-      background: radial-gradient(circle at top left, #0f172a, #020617);
-      background-attachment: fixed;
-    }
+    body { background: radial-gradient(circle at top left, #0f172a, #020617); background-attachment: fixed; }
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-thumb { background-color: #6366f1; border-radius: 10px; }
     ::selection { background-color: #4f46e5; color: white; }
@@ -25,7 +21,7 @@
       🔐 Company Email Finder
     </h1>
 
-    <!-- LOGIN + VERIFY SECTIONS -->
+    <!-- LOGIN SECTION -->
     <div id="login-section">
       <p class="text-sm mb-4 text-gray-400 text-center">Enter your email to get OTP:</p>
       <input id="email" type="email" placeholder="Your email address"
@@ -35,6 +31,7 @@
       </button>
     </div>
 
+    <!-- VERIFY SECTION -->
     <div id="verify-section" class="hidden">
       <p class="text-sm mb-4 text-gray-400 text-center">Enter the OTP sent to your email:</p>
       <input id="otp" type="text" placeholder="6-digit OTP"
@@ -44,7 +41,7 @@
       </button>
     </div>
 
-    <!-- DASHBOARD -->
+    <!-- APP SECTION -->
     <div id="app-section" class="hidden">
       <div class="flex items-center justify-between mb-8">
         <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
@@ -53,69 +50,46 @@
         <button onclick="logout()" class="text-sm text-gray-400 hover:text-red-400 hover:underline transition">Logout</button>
       </div>
 
-      <!-- === TWO COLUMN DASHBOARD === -->
+      <!-- TWO COLUMN DASHBOARD -->
       <div class="grid lg:grid-cols-2 gap-8">
-        <!-- LEFT: Single Search -->
+        <!-- SINGLE COMPANY SEARCH -->
         <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 shadow-lg border border-gray-700">
           <h3 class="text-xl font-semibold text-indigo-400 mb-2">🔍 Single Company Lookup</h3>
           <p class="text-gray-400 text-sm mb-3">Find emails for one company instantly using AI-powered automation.</p>
-
           <div class="flex gap-2 mb-3">
             <input id="company" type="text" placeholder="Enter company name"
-              class="flex-1 p-3 rounded-lg bg-gray-900 text-white border border-gray-700
-                     focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-500" />
-            <button onclick="findEmails()"
-              class="bg-indigo-500 hover:bg-indigo-600 transition px-4 py-3 rounded-lg font-semibold text-white shadow-md">
+              class="flex-1 p-3 rounded-lg bg-gray-900 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-500" />
+            <button onclick="findEmails()" class="bg-indigo-500 hover:bg-indigo-600 transition px-4 py-3 rounded-lg font-semibold text-white shadow-md">
               Find
             </button>
           </div>
-
-          <div id="result"
-            class="bg-gray-950 border border-gray-800 p-4 rounded-lg text-sm overflow-x-auto text-gray-300 h-56 overflow-y-auto">
+          <div id="result" class="bg-gray-950 border border-gray-800 p-4 rounded-lg text-sm overflow-x-auto text-gray-300 h-56 overflow-y-auto">
             <span class="text-gray-500 italic">Results will appear here...</span>
           </div>
         </div>
 
-        <!-- RIGHT: Bulk Processing -->
+        <!-- BULK PROCESSING -->
         <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 shadow-lg border border-gray-700">
           <h3 class="text-xl font-semibold text-purple-400 mb-2">📊 Bulk Company Processing</h3>
           <p class="text-gray-400 text-sm mb-3">Upload an Excel/CSV file and process 100+ companies automatically.</p>
 
           <div class="flex flex-col sm:flex-row gap-3 mb-4">
             <input id="fileUpload" type="file" accept=".xlsx,.csv"
-              class="flex-1 text-sm bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-gray-300 file:mr-3
-                     file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white
-                     file:cursor-pointer hover:file:bg-indigo-700" />
-            <button id="btnStartBulk" onclick="processSheet()"
-              class="bg-purple-500 hover:bg-purple-600 transition px-4 py-2 rounded-lg font-semibold text-white shadow-md">
-              ▶ Start
-            </button>
-            <button id="btnTemplate" onclick="downloadTemplate()"
-              class="bg-gray-700 hover:bg-gray-600 transition px-4 py-2 rounded-lg font-semibold text-white">
-              ⬇ Template
-            </button>
+              class="flex-1 text-sm bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-gray-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white file:cursor-pointer hover:file:bg-indigo-700" />
+            <button id="btnStartBulk" onclick="processSheet()" class="bg-purple-500 hover:bg-purple-600 transition px-4 py-2 rounded-lg font-semibold text-white shadow-md">▶ Start</button>
+            <button id="btnTemplate" onclick="downloadTemplate()" class="bg-gray-700 hover:bg-gray-600 transition px-4 py-2 rounded-lg font-semibold text-white">⬇ Template</button>
           </div>
 
-          <progress id="progressBar" value="0" max="100"
-            class="w-full h-2 rounded overflow-hidden bg-gray-800" style="accent-color:#a855f7;"></progress>
+          <progress id="progressBar" value="0" max="100" class="w-full h-2 rounded overflow-hidden bg-gray-800" style="accent-color:#a855f7;"></progress>
           <div class="flex justify-between text-xs text-gray-400 mt-1">
             <span id="progressText">0 / 0 processed</span>
             <span id="bulkStatus">Idle</span>
           </div>
 
           <div class="mt-5 flex flex-wrap gap-2">
-            <button id="btnDownloadXlsx" onclick="downloadResultsXlsx()" disabled
-              class="bg-indigo-500/70 hover:bg-indigo-500 transition px-3 py-2 rounded-lg text-sm text-white disabled:opacity-40">
-              📘 Download .xlsx
-            </button>
-            <button id="btnDownloadCsv" onclick="downloadResultsCsv()" disabled
-              class="bg-indigo-500/70 hover:bg-indigo-500 transition px-3 py-2 rounded-lg text-sm text-white disabled:opacity-40">
-              📄 Download .csv
-            </button>
-            <button id="btnClearTable" onclick="clearBulkTable()"
-              class="ml-auto bg-gray-700 hover:bg-gray-600 transition px-3 py-2 rounded-lg text-sm text-white">
-              🧹 Clear
-            </button>
+            <button id="btnDownloadXlsx" onclick="downloadResultsXlsx()" disabled class="bg-indigo-500/70 hover:bg-indigo-500 transition px-3 py-2 rounded-lg text-sm text-white disabled:opacity-40">📘 Download .xlsx</button>
+            <button id="btnDownloadCsv" onclick="downloadResultsCsv()" disabled class="bg-indigo-500/70 hover:bg-indigo-500 transition px-3 py-2 rounded-lg text-sm text-white disabled:opacity-40">📄 Download .csv</button>
+            <button id="btnClearTable" onclick="clearBulkTable()" class="ml-auto bg-gray-700 hover:bg-gray-600 transition px-3 py-2 rounded-lg text-sm text-white">🧹 Clear</button>
           </div>
 
           <div class="mt-6 overflow-auto max-h-[420px] border border-gray-800 rounded-lg shadow-inner">
@@ -138,24 +112,22 @@
     </div>
   </div>
 
-  <!-- FOOTER -->
   <footer class="mt-10 text-center">
     <p class="text-sm text-gray-400 tracking-wide">
-      Proudly made by
-      <span class="text-blue-400 font-semibold animate-pulse drop-shadow-lg">
-        Mohit Nathwani
-      </span>
+      Proudly made by <span class="text-blue-400 font-semibold animate-pulse drop-shadow-lg">Mohit Nathwani</span>
     </p>
   </footer>
 
   <script>
+    // ------------------- GLOBALS -------------------
     const API_BASE = "/.netlify/functions";
+    let token = localStorage.getItem("authToken");
     const emailInput = document.getElementById("email");
     const otpInput = document.getElementById("otp");
     const companyInput = document.getElementById("company");
     const resultBox = document.getElementById("result");
-    let token = localStorage.getItem("authToken");
 
+    // ------------------- HELPERS -------------------
     function showSpinner(text = "Processing...") {
       resultBox.innerHTML = `
         <div class="flex flex-col items-center justify-center p-6">
@@ -176,61 +148,58 @@
       setTimeout(() => popup.remove(), 2500);
     }
 
+    // ------------------- AUTH -------------------
     async function sendOTP() {
       const email = emailInput.value.trim();
+      if (!email) return showPopup("Please enter your email.", "error");
+
       showSpinner("Sending OTP...");
-      const res = await fetch(`${API_BASE}/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
-      });
-      const data = await res.json();
-      resultBox.innerHTML = "";
-      if (res.ok) {
-        showPopup("OTP sent successfully!");
-        document.getElementById("login-section").classList.add("hidden");
-        document.getElementById("verify-section").classList.remove("hidden");
-      } else {
-        showPopup(data.error || "Error sending OTP.", "error");
+      try {
+        const res = await fetch(`${API_BASE}/send-otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        resultBox.innerHTML = "";
+        if (res.ok) {
+          showPopup("OTP sent successfully!");
+          document.getElementById("login-section").classList.add("hidden");
+          document.getElementById("verify-section").classList.remove("hidden");
+        } else {
+          showPopup(data.error || "Error sending OTP.", "error");
+        }
+      } catch (err) {
+        showPopup("Network error while sending OTP.", "error");
       }
     }
 
     async function verifyOTP() {
       const email = emailInput.value.trim();
       const otp = otpInput.value.trim();
-      showSpinner("Verifying OTP...");
-      const res = await fetch(`${API_BASE}/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp })
-      });
-      const data = await res.json();
-      resultBox.innerHTML = "";
-      if (data.success) {
-        token = data.token;
-        localStorage.setItem("authToken", token);
-        showPopup("Welcome, Mohit! Login successful 🎉");
-        document.getElementById("verify-section").classList.add("hidden");
-        document.getElementById("app-section").classList.remove("hidden");
-      } else {
-        showPopup(data.error || "Invalid OTP.", "error");
-      }
-    }
+      if (!otp) return showPopup("Please enter your OTP.", "error");
 
-    async function findEmails() {
-      const company = companyInput.value.trim();
-      showSpinner("Searching company emails...");
-      const res = await fetch(`${API_BASE}/find-company-emails`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ company })
-      });
-      const data = await res.json();
-      resultBox.innerText = JSON.stringify(data, null, 2);
-      showPopup("Search complete ✅");
+      showSpinner("Verifying OTP...");
+      try {
+        const res = await fetch(`${API_BASE}/verify-otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, otp })
+        });
+        const data = await res.json();
+        resultBox.innerHTML = "";
+        if (data.success) {
+          token = data.token;
+          localStorage.setItem("authToken", token);
+          showPopup("Welcome, Mohit! Login successful 🎉");
+          document.getElementById("verify-section").classList.add("hidden");
+          document.getElementById("app-section").classList.remove("hidden");
+        } else {
+          showPopup(data.error || "Invalid OTP.", "error");
+        }
+      } catch {
+        showPopup("Network error during verification.", "error");
+      }
     }
 
     function logout() {
@@ -241,133 +210,117 @@
       document.getElementById("login-section").classList.remove("hidden");
     }
 
-    if (token) {
-      document.getElementById("login-section").classList.add("hidden");
-      document.getElementById("app-section").classList.remove("hidden");
+    // ------------------- FIND EMAILS -------------------
+    async function findEmails() {
+      const company = companyInput.value.trim();
+      if (!company) return showPopup("Please enter a company name.", "error");
+
+      showSpinner("Searching company emails...");
+      const res = await fetch(`${API_BASE}/find-company-emails`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ company })
+      });
+      const data = await res.json();
+      resultBox.innerText = JSON.stringify(data, null, 2);
+      showPopup("Search complete ✅");
     }
 
-    // === Bulk placeholder logic ===
+    // ------------------- BULK PROCESSING -------------------
     let bulkRows = [];
+
     function downloadTemplate() {
       const ws = XLSX.utils.aoa_to_sheet([["Company"], ["Google"], ["Adobe"]]);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Companies");
       XLSX.writeFile(wb, "company_template.xlsx");
     }
- let bulkRows = [];
 
-async function processSheet() {
-  const fileInput = document.getElementById("fileUpload");
-  const file = fileInput.files[0];
-  if (!file) return showPopup("Please choose a file first.", "error");
+    async function processSheet() {
+      const fileInput = document.getElementById("fileUpload");
+      const file = fileInput.files[0];
+      if (!file) return showPopup("Please choose a file first.", "error");
 
-  const progressBar = document.getElementById("progressBar");
-  const progressText = document.getElementById("progressText");
-  const bulkStatus = document.getElementById("bulkStatus");
-  const tbody = document.getElementById("bulkTableBody");
-  tbody.innerHTML = "";
-  bulkRows = [];
+      const progressBar = document.getElementById("progressBar");
+      const progressText = document.getElementById("progressText");
+      const bulkStatus = document.getElementById("bulkStatus");
+      const tbody = document.getElementById("bulkTableBody");
+      tbody.innerHTML = "";
+      bulkRows = [];
 
-  showPopup("Reading file...");
-  bulkStatus.innerText = "Reading file...";
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: "array" });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const companies = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }).flat().filter((c, i) => c && i > 0);
+      if (companies.length === 0) return showPopup("No company names found!", "error");
 
-  const data = await file.arrayBuffer();
-  const workbook = XLSX.read(data, { type: "array" });
-  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-  const companies = XLSX.utils.sheet_to_json(firstSheet, { header: 1 })
-    .flat()
-    .filter((name, i) => name && i > 0); // skip header
+      showPopup(`Processing ${companies.length} companies...`);
+      bulkStatus.innerText = "Running...";
 
-  if (companies.length === 0) return showPopup("No company names found!", "error");
+      for (let i = 0; i < companies.length; i++) {
+        const company = companies[i];
+        let row = { index: i + 1, company, domain: "-", emails: "-", source: "-", status: "⏳ Processing..." };
+        bulkRows.push(row);
+        updateBulkTable();
 
-  showPopup(`Processing ${companies.length} companies...`);
-  bulkStatus.innerText = "Running...";
+        try {
+          const res = await fetch(`${API_BASE}/find-company-emails`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ company })
+          });
+          const data = await res.json();
+          if (res.ok && data.domain) {
+            row.domain = data.domain;
+            row.emails = (data.emails || []).join(", ") || "—";
+            row.source = data.source || "N/A";
+            row.status = "✅ Success";
+          } else row.status = "❌ Not found";
+        } catch { row.status = "⚠️ Error"; }
 
-  for (let i = 0; i < companies.length; i++) {
-    const company = companies[i];
-    let row = { index: i + 1, company, domain: "-", emails: "-", source: "-", status: "⏳ Processing..." };
-    bulkRows.push(row);
-    updateBulkTable();
-
-    try {
-      const res = await fetch(`${API_BASE}/find-company-emails`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ company })
-      });
-      const data = await res.json();
-      if (res.ok && data.domain) {
-        row.domain = data.domain;
-        row.emails = (data.emails || []).join(", ") || "—";
-        row.source = data.source || "N/A";
-        row.status = "✅ Success";
-      } else {
-        row.status = "❌ Not found";
+        progressBar.value = ((i + 1) / companies.length) * 100;
+        progressText.innerText = `${i + 1} / ${companies.length} processed`;
+        updateBulkTable();
       }
-    } catch (err) {
-      row.status = "⚠️ Error";
+
+      bulkStatus.innerText = "✅ Complete";
+      document.getElementById("btnDownloadXlsx").disabled = false;
+      document.getElementById("btnDownloadCsv").disabled = false;
+      showPopup("Bulk processing complete!");
     }
 
-    progressBar.value = ((i + 1) / companies.length) * 100;
-    progressText.innerText = `${i + 1} / ${companies.length} processed`;
-    updateBulkTable();
-  }
+    function updateBulkTable() {
+      const tbody = document.getElementById("bulkTableBody");
+      tbody.innerHTML = bulkRows.map(r => `
+        <tr class="hover:bg-gray-800/50 transition">
+          <td class="p-3 text-gray-400">${r.index}</td>
+          <td class="p-3">${r.company}</td>
+          <td class="p-3">${r.domain}</td>
+          <td class="p-3 text-gray-300 truncate max-w-[180px]">${r.emails}</td>
+          <td class="p-3">${r.source}</td>
+          <td class="p-3">${r.status}</td>
+        </tr>`).join("");
+    }
 
-  bulkStatus.innerText = "✅ Complete";
-  document.getElementById("btnDownloadXlsx").disabled = false;
-  document.getElementById("btnDownloadCsv").disabled = false;
-  showPopup("Bulk processing complete!");
-}
+    function downloadResultsXlsx() {
+      const ws = XLSX.utils.json_to_sheet(bulkRows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Results");
+      XLSX.writeFile(wb, "bulk_results.xlsx");
+      showPopup("Downloaded Excel file ✅");
+    }
 
-// Live table updater
-function updateBulkTable() {
-  const tbody = document.getElementById("bulkTableBody");
-  tbody.innerHTML = bulkRows.map(
-    (r) => `
-      <tr class="hover:bg-gray-800/50 transition">
-        <td class="p-3 text-gray-400">${r.index}</td>
-        <td class="p-3">${r.company}</td>
-        <td class="p-3">${r.domain}</td>
-        <td class="p-3 text-gray-300 truncate max-w-[180px]">${r.emails}</td>
-        <td class="p-3">${r.source}</td>
-        <td class="p-3">${r.status}</td>
-      </tr>`
-  ).join("");
-}
+    function downloadResultsCsv() {
+      const ws = XLSX.utils.json_to_sheet(bulkRows);
+      const csv = XLSX.utils.sheet_to_csv(ws);
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "bulk_results.csv";
+      a.click();
+      showPopup("Downloaded CSV file ✅");
+    }
 
-// Download results
-function downloadResultsXlsx() {
-  const ws = XLSX.utils.json_to_sheet(bulkRows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Results");
-  XLSX.writeFile(wb, "bulk_results.xlsx");
-  showPopup("Downloaded Excel file ✅");
-}
-
-function downloadResultsCsv() {
-  const ws = XLSX.utils.json_to_sheet(bulkRows);
-  const csv = XLSX.utils.sheet_to_csv(ws);
-  const blob = new Blob([csv], { type: "text/csv" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "bulk_results.csv";
-  a.click();
-  showPopup("Downloaded CSV file ✅");
-}
-
-function clearBulkTable() {
-  bulkRows = [];
-  document.getElementById("bulkTableBody").innerHTML = "";
-  document.getElementById("progressBar").value = 0;
-  document.getElementById("progressText").innerText = "0 / 0 processed";
-  document.getElementById("bulkStatus").innerText = "Idle";
-  document.getElementById("btnDownloadXlsx").disabled = true;
-  document.getElementById("btnDownloadCsv").disabled = true;
-  showPopup("Cleared table");
-}
     function clearBulkTable() {
       bulkRows = [];
       document.getElementById("bulkTableBody").innerHTML = "";
@@ -376,6 +329,11 @@ function clearBulkTable() {
       document.getElementById("bulkStatus").innerText = "Idle";
       document.getElementById("btnDownloadXlsx").disabled = true;
       document.getElementById("btnDownloadCsv").disabled = true;
+    }
+
+    if (token) {
+      document.getElementById("login-section").classList.add("hidden");
+      document.getElementById("app-section").classList.remove("hidden");
     }
   </script>
 </body>
