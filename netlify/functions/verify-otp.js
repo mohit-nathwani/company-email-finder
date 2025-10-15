@@ -1,5 +1,5 @@
-// netlify/functions/verify-otp.js
 import crypto from "crypto";
+import { createClient } from "@netlify/blobs";
 
 export async function handler(event) {
   const { email, otp } = JSON.parse(event.body || "{}");
@@ -11,16 +11,15 @@ export async function handler(event) {
     return { statusCode: 403, body: JSON.stringify({ error: "Unauthorized" }) };
 
   const hashed = crypto.createHash("sha256").update(otp).digest("hex");
+  const blobs = createClient();
+  const storedHash = await blobs.get(`otp-${email}`);
 
-  // access the in-memory store created by send-otp.js
-  globalThis.otpCache = globalThis.otpCache || {};
-  const record = globalThis.otpCache[email];
-
-  if (!record || record.hash !== hashed || record.expires < Date.now()) {
+  if (!storedHash || storedHash !== hashed)
     return { statusCode: 401, body: JSON.stringify({ error: "Invalid or expired OTP" }) };
-  }
 
-  // success: issue a short-lived session token
+  // optional: delete OTP after successful check
+  await blobs.delete(`otp-${email}`);
+
   const token = crypto.randomBytes(16).toString("hex");
   return { statusCode: 200, body: JSON.stringify({ success: true, token }) };
 }
