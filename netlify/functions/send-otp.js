@@ -1,4 +1,3 @@
-// netlify/functions/send-otp.js
 import fs from "fs";
 import crypto from "crypto";
 
@@ -11,15 +10,18 @@ export async function handler(event) {
   if (email !== allowedEmail)
     return { statusCode: 403, body: JSON.stringify({ error: "Unauthorized email" }) };
 
-  // Generate OTP and hash
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const hashed = crypto.createHash("sha256").update(otp).digest("hex");
 
-  // Save OTP to a temporary file in Netlify's /tmp directory
-  const path = `/tmp/otp-${email}.txt`;
-  fs.writeFileSync(path, `${hashed}|${Date.now() + 10 * 60 * 1000}`);
+  const otpFile = "/tmp/otp.json";
+  let otpData = {};
+  if (fs.existsSync(otpFile)) {
+    otpData = JSON.parse(fs.readFileSync(otpFile, "utf8"));
+  }
+  otpData[email] = { hash: hashed, expires: Date.now() + 10 * 60 * 1000 };
+  fs.writeFileSync(otpFile, JSON.stringify(otpData));
 
-  // Send OTP via Mailjet
+  // Send via Mailjet
   const auth = Buffer.from(
     `${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`
   ).toString("base64");
