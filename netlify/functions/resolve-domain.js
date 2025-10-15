@@ -1,5 +1,4 @@
 // netlify/functions/resolve-domain.js
-import fetch from "node-fetch";
 
 const GEMINI_KEY = process.env.GEMINI_KEY_1; // add this in Netlify env vars
 const GOOGLE_KEY = process.env.GOOGLE_API_KEY; // your Programmable Search key
