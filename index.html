@@ -4,13 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Company Email Finder</title>
+  <style>
+  body { background: radial-gradient(circle at top, #0f172a, #020617); }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background-color: #6366f1; border-radius: 10px; }
+  ::selection { background-color: #4f46e5; color: white; }
+</style>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
 
 <body class="bg-gray-950 text-white min-h-screen flex flex-col items-center justify-center font-sans">
 
-  <div class="bg-gray-900 p-8 rounded-2xl shadow-2xl max-w-md w-full">
+  <div class="bg-gray-900 p-10 rounded-2xl shadow-2xl w-full max-w-5xl mx-auto">
     <h1 class="text-3xl font-bold text-center mb-6 text-blue-400">🔐 Company Email Finder</h1>
 
     <!-- Login Section -->
