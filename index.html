@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Company Email Finder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-950 text-white min-h-screen flex flex-col items-center justify-center font-sans">
+
+  <div class="bg-gray-900 p-8 rounded-2xl shadow-2xl max-w-md w-full">
+    <h1 class="text-3xl font-bold text-center mb-6 text-blue-400">🔐 Company Email Finder</h1>
+
+    <!-- Login Section -->
+    <div id="login-section">
+      <p class="text-sm mb-4 text-gray-400 text-center">Enter your email to get OTP:</p>
+      <input id="email" type="email" placeholder="Your email address"
+        class="w-full p-3 rounded-lg bg-gray-800 text-white mb-4 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <button onclick="sendOTP()"
+        class="w-full bg-blue-500 hover:bg-blue-600 transition p-3 rounded-lg font-semibold">Send OTP</button>
+    </div>
+
+    <!-- OTP Verification Section -->
+    <div id="verify-section" class="hidden">
+      <p class="text-sm mb-4 text-gray-400 text-center">Enter the OTP sent to your email:</p>
+      <input id="otp" type="text" placeholder="6-digit OTP"
+        class="w-full p-3 rounded-lg bg-gray-800 text-white mb-4 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <button onclick="verifyOTP()"
+        class="w-full bg-green-500 hover:bg-green-600 transition p-3 rounded-lg font-semibold">Verify OTP</button>
+    </div>
+
+    <!-- Main App Section -->
+    <div id="app-section" class="hidden">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xl font-semibold text-blue-300">Welcome, Mohit 👋</h2>
+        <button onclick="logout()" class="text-sm text-gray-400 hover:text-red-400">Logout</button>
+      </div>
+      <p class="text-gray-400 text-sm mb-3">You are logged in securely.</p>
+
+      <input id="company" type="text" placeholder="Enter company name"
+        class="w-full p-3 rounded-lg bg-gray-800 text-white mb-4 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <button onclick="findEmails()"
+        class="w-full bg-indigo-500 hover:bg-indigo-600 transition p-3 rounded-lg font-semibold">Find Company Emails</button>
+
+      <pre id="result" class="mt-4 bg-gray-800 p-4 rounded-lg text-sm overflow-x-auto text-gray-300"></pre>
+    </div>
+  </div>
+
+  <!-- Glowing Footer -->
+  <footer class="mt-10 text-center">
+    <p class="text-sm text-gray-400 tracking-wide">
+      Proudly made by
+      <span class="text-blue-400 font-semibold animate-pulse drop-shadow-lg">
+        Mohit Nathwani
+      </span>
+    </p>
+  </footer>
+
+  <script>
+    const API_BASE = "/.netlify/functions";
+    const emailInput = document.getElementById("email");
+    const otpInput = document.getElementById("otp");
+    const companyInput = document.getElementById("company");
+    const resultBox = document.getElementById("result");
+    let token = localStorage.getItem("authToken");
+
+    function showSpinner(text = "Processing...") {
+      resultBox.innerHTML = `
+        <div class="flex flex-col items-center justify-center p-6">
+          <svg class="animate-spin h-8 w-8 text-blue-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+          <p class="text-gray-400 text-sm">${text}</p>
+        </div>`;
+    }
+
+    function showPopup(message, type = "success") {
+      const popup = document.createElement("div");
+      popup.className = `fixed top-5 right-5 px-5 py-3 rounded-lg text-white font-semibold shadow-lg z-50 transition transform duration-300 ${
+        type === "success" ? "bg-green-500" : "bg-red-500"
+      }`;
+      popup.innerText = message;
+      document.body.appendChild(popup);
+      setTimeout(() => popup.classList.add("opacity-0", "-translate-y-2"), 2000);
+      setTimeout(() => popup.remove(), 2500);
+    }
+
+    async function sendOTP() {
+      const email = emailInput.value.trim();
+      showSpinner("Sending OTP...");
+      const res = await fetch(`${API_BASE}/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      resultBox.innerHTML = "";
+      if (res.ok) {
+        showPopup("OTP sent successfully!");
+        document.getElementById("login-section").classList.add("hidden");
+        document.getElementById("verify-section").classList.remove("hidden");
+      } else {
+        showPopup(data.error || "Error sending OTP.", "error");
+      }
+    }
+
+    async function verifyOTP() {
+      const email = emailInput.value.trim();
+      const otp = otpInput.value.trim();
+      showSpinner("Verifying OTP...");
+      const res = await fetch(`${API_BASE}/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp })
+      });
+      const data = await res.json();
+      resultBox.innerHTML = "";
+      if (data.success) {
+        token = data.token;
+        localStorage.setItem("authToken", token);
+        showPopup("Welcome, Mohit! Login successful 🎉");
+        document.getElementById("verify-section").classList.add("hidden");
+        document.getElementById("app-section").classList.remove("hidden");
+      } else {
+        showPopup(data.error || "Invalid OTP.", "error");
+      }
+    }
+
+    async function findEmails() {
+      const company = companyInput.value.trim();
+      showSpinner("Searching company emails...");
+      const res = await fetch(`${API_BASE}/find-company-emails`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ company })
+      });
+      const data = await res.json();
+      resultBox.innerText = JSON.stringify(data, null, 2);
+      showPopup("Search complete ✅");
+    }
+
+    function logout() {
+      localStorage.removeItem("authToken");
+      token = null;
+      showPopup("Logged out successfully!");
+      document.getElementById("app-section").classList.add("hidden");
+      document.getElementById("login-section").classList.remove("hidden");
+    }
+
+    if (token) {
+      document.getElementById("login-section").classList.add("hidden");
+      document.getElementById("app-section").classList.remove("hidden");
+    }
+  </script>
+</body>
+</html>
