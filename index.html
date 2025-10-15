@@ -254,9 +254,120 @@
       XLSX.utils.book_append_sheet(wb, ws, "Companies");
       XLSX.writeFile(wb, "company_template.xlsx");
     }
-    async function processSheet() { alert("Bulk logic next!"); }
-    function downloadResultsXlsx() { alert("Coming next!"); }
-    function downloadResultsCsv() { alert("Coming next!"); }
+ let bulkRows = [];
+
+async function processSheet() {
+  const fileInput = document.getElementById("fileUpload");
+  const file = fileInput.files[0];
+  if (!file) return showPopup("Please choose a file first.", "error");
+
+  const progressBar = document.getElementById("progressBar");
+  const progressText = document.getElementById("progressText");
+  const bulkStatus = document.getElementById("bulkStatus");
+  const tbody = document.getElementById("bulkTableBody");
+  tbody.innerHTML = "";
+  bulkRows = [];
+
+  showPopup("Reading file...");
+  bulkStatus.innerText = "Reading file...";
+
+  const data = await file.arrayBuffer();
+  const workbook = XLSX.read(data, { type: "array" });
+  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+  const companies = XLSX.utils.sheet_to_json(firstSheet, { header: 1 })
+    .flat()
+    .filter((name, i) => name && i > 0); // skip header
+
+  if (companies.length === 0) return showPopup("No company names found!", "error");
+
+  showPopup(`Processing ${companies.length} companies...`);
+  bulkStatus.innerText = "Running...";
+
+  for (let i = 0; i < companies.length; i++) {
+    const company = companies[i];
+    let row = { index: i + 1, company, domain: "-", emails: "-", source: "-", status: "⏳ Processing..." };
+    bulkRows.push(row);
+    updateBulkTable();
+
+    try {
+      const res = await fetch(`${API_BASE}/find-company-emails`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ company })
+      });
+      const data = await res.json();
+      if (res.ok && data.domain) {
+        row.domain = data.domain;
+        row.emails = (data.emails || []).join(", ") || "—";
+        row.source = data.source || "N/A";
+        row.status = "✅ Success";
+      } else {
+        row.status = "❌ Not found";
+      }
+    } catch (err) {
+      row.status = "⚠️ Error";
+    }
+
+    progressBar.value = ((i + 1) / companies.length) * 100;
+    progressText.innerText = `${i + 1} / ${companies.length} processed`;
+    updateBulkTable();
+  }
+
+  bulkStatus.innerText = "✅ Complete";
+  document.getElementById("btnDownloadXlsx").disabled = false;
+  document.getElementById("btnDownloadCsv").disabled = false;
+  showPopup("Bulk processing complete!");
+}
+
+// Live table updater
+function updateBulkTable() {
+  const tbody = document.getElementById("bulkTableBody");
+  tbody.innerHTML = bulkRows.map(
+    (r) => `
+      <tr class="hover:bg-gray-800/50 transition">
+        <td class="p-3 text-gray-400">${r.index}</td>
+        <td class="p-3">${r.company}</td>
+        <td class="p-3">${r.domain}</td>
+        <td class="p-3 text-gray-300 truncate max-w-[180px]">${r.emails}</td>
+        <td class="p-3">${r.source}</td>
+        <td class="p-3">${r.status}</td>
+      </tr>`
+  ).join("");
+}
+
+// Download results
+function downloadResultsXlsx() {
+  const ws = XLSX.utils.json_to_sheet(bulkRows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Results");
+  XLSX.writeFile(wb, "bulk_results.xlsx");
+  showPopup("Downloaded Excel file ✅");
+}
+
+function downloadResultsCsv() {
+  const ws = XLSX.utils.json_to_sheet(bulkRows);
+  const csv = XLSX.utils.sheet_to_csv(ws);
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "bulk_results.csv";
+  a.click();
+  showPopup("Downloaded CSV file ✅");
+}
+
+function clearBulkTable() {
+  bulkRows = [];
+  document.getElementById("bulkTableBody").innerHTML = "";
+  document.getElementById("progressBar").value = 0;
+  document.getElementById("progressText").innerText = "0 / 0 processed";
+  document.getElementById("bulkStatus").innerText = "Idle";
+  document.getElementById("btnDownloadXlsx").disabled = true;
+  document.getElementById("btnDownloadCsv").disabled = true;
+  showPopup("Cleared table");
+}
     function clearBulkTable() {
       bulkRows = [];
       document.getElementById("bulkTableBody").innerHTML = "";
