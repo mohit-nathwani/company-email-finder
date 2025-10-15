@@ -13,20 +13,21 @@ export async function handler(event) {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const hashed = crypto.createHash("sha256").update(otp).digest("hex");
 
-  // Save OTP in JSONBin for 10 minutes
-  const otpRecord = { email, hashed, expires: Date.now() + 10 * 60 * 1000 };
-  const binRes = await fetch("https://api.jsonbin.io/v3/b", {
+  // --- create a unique short key (like binId)
+  const binId = crypto.randomBytes(6).toString("hex");
+
+  // store in webhook.site (acts like public jsonbin)
+  await fetch(`https://webhook.site/token/${binId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(otpRecord),
+    body: JSON.stringify({ email, hashed, expires: Date.now() + 10 * 60 * 1000 }),
   });
-  const binData = await binRes.json();
-  const binId = binData.metadata.id;
 
-  // Send via Mailjet
+  // send OTP through Mailjet
   const auth = Buffer.from(
     `${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`
   ).toString("base64");
+
   await fetch("https://api.mailjet.com/v3.1/send", {
     method: "POST",
     headers: {
